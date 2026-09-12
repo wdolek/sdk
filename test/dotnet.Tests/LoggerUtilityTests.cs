@@ -6,59 +6,111 @@ using Microsoft.DotNet.Cli.Commands.Test;
 
 namespace dotnet.Tests
 {
+    [TestClass]
     public class LoggerUtilityTests
     {
-        [Theory]
-        [InlineData("-tl")]
-        [InlineData("--tl")]
-        [InlineData("/tl")]
-        [InlineData("-tl:off")]
-        [InlineData("--tl:off")]
-        [InlineData("/tl:on")]
-        [InlineData("-TL:Off")]
-        [InlineData("-terminallogger")]
-        [InlineData("--terminalLogger")]
-        [InlineData("/terminallogger")]
-        [InlineData("-terminallogger:auto")]
-        [InlineData("--TerminalLogger:on")]
-        [InlineData("-ll")]
-        [InlineData("--ll:off")]
-        [InlineData("/ll")]
-        [InlineData("-livelogger")]
-        [InlineData("--livelogger:off")]
-        [InlineData("-tlp:default=true")]
-        [InlineData("--tlp:default=auto")]
-        [InlineData("/tlp:DISABLENODEDISPLAY")]
-        [InlineData("-terminalloggerparameters:default=true")]
-        [InlineData("--terminalLoggerParameters:default=true")]
-        public void IsTerminalLoggerArgument_RecognizesTerminalLoggerArguments(string arg)
+        [TestMethod]
+        [DataRow("-tl", "-tl:auto")]
+        [DataRow("--tl", "--tl:auto")]
+        [DataRow("/tl", "/tl:auto")]
+        [DataRow("-tl:off", "-tl:off")]
+        [DataRow("-TL:off", "-TL:off")]
+        [DataRow("-TL:Off", "-TL:Off")]
+        [DataRow("--tl:off", "--tl:off")]
+        [DataRow("/tl:on", "/tl:on")]
+        [DataRow("/tl:off", "/tl:off")]
+        [DataRow("-terminallogger", "-terminallogger:auto")]
+        [DataRow("--terminalLogger", "--terminalLogger:auto")]
+        [DataRow("/terminallogger", "/terminallogger:auto")]
+        [DataRow("-terminallogger:auto", "-terminallogger:auto")]
+        [DataRow("--TerminalLogger:on", "--TerminalLogger:on")]
+        [DataRow("--terminalLogger:off", "--terminalLogger:off")]
+        [DataRow("-ll", "-ll:auto")]
+        [DataRow("--ll:off", "--ll:off")]
+        [DataRow("/ll", "/ll:auto")]
+        [DataRow("-livelogger", "-livelogger:auto")]
+        [DataRow("--livelogger:off", "--livelogger:off")]
+        [DataRow("-tlp:default=true", "-tlp:default=true")]
+        [DataRow("--tlp:default=auto", "--tlp:default=auto")]
+        [DataRow("-tlp:verbosity=quiet", "-tlp:verbosity=quiet")]
+        [DataRow("/tlp:DISABLENODEDISPLAY", "/tlp:DISABLENODEDISPLAY")]
+        [DataRow("-terminalloggerparameters:default=true", "-terminalloggerparameters:default=true")]
+        [DataRow("--terminalLoggerParameters:default=true", "--terminalLoggerParameters:default=true")]
+        [DataRow("--terminalLoggerParameters:verbosity=quiet", "--terminalLoggerParameters:verbosity=quiet")]
+        [DataRow("-clp:NoSummary", "-clp:NoSummary")]
+        [DataRow("--consoleLoggerParameters:NoSummary", "--consoleLoggerParameters:NoSummary")]
+        [DataRow("-noconsolelogger", "-noconsolelogger")]
+        [DataRow("-noConsoleLogger", "-noConsoleLogger")]
+        [DataRow("/noconsolelogger", "/noconsolelogger")]
+        [DataRow("-mt", "-mt")]
+        [DataRow("--mt", "--mt")]
+        [DataRow("/mt", "/mt")]
+        [DataRow("-MT", "-MT")]
+        [DataRow("-mt:true", "-mt:true")]
+        [DataRow("-mt:false", "-mt:false")]
+        [DataRow("-mt:", "-mt:")]
+        [DataRow("-MT:False", "-MT:False")]
+        [DataRow("--mt:true", "--mt:true")]
+        [DataRow("/mt:false", "/mt:false")]
+        [DataRow("-multithreaded", "-multithreaded")]
+        [DataRow("--multiThreaded", "--multiThreaded")]
+        [DataRow("/multithreaded", "/multithreaded")]
+        [DataRow("-multithreaded:true", "-multithreaded:true")]
+        [DataRow("--multiThreaded:false", "--multiThreaded:false")]
+        [DataRow("--multiThreaded:", "--multiThreaded:")]
+        [DataRow("-mt:\"true\"", "-mt:\"true\"")]
+        [DataRow("-mt:\"false\"", "-mt:\"false\"")]
+        [DataRow("--multiThreaded:\"False\"", "--multiThreaded:\"False\"")]
+        [DataRow("/mt:\"true\"", "/mt:\"true\"")]
+        [DataRow("-mt:\"\"", "-mt:\"\"")]
+        [DataRow("\"--mt:false\"", "\"--mt:false\"")]
+        [DataRow("\"-mt\"", "\"-mt\"")]
+        [DataRow("-m\"t\":fa\"lse\"", "-m\"t\":fa\"lse\"")]
+        public void LoggerArgument_ArgumentForms(string arg, string expectedArg)
         {
-            LoggerUtility.IsTerminalLoggerArgument(arg).Should().BeTrue();
+            LoggerUtility.SeparateMSBuildArguments([arg], out var msbuildArgs, out var otherArgs);
+
+            msbuildArgs.Should().Equal(expectedArg);
+            otherArgs.Should().BeEmpty();
         }
 
-        [Theory]
-        [InlineData("--no-build")]
-        [InlineData("-bl")]
-        [InlineData("--binaryLogger")]
-        [InlineData("-bl:foo.binlog")]
-        [InlineData("-tlapropertythatstartslikethis")]
-        [InlineData("--tlpwithnocolon")]
-        [InlineData("--terminallogger-something")]
-        [InlineData("-llextra")]
-        [InlineData("foo.csproj")]
-        [InlineData("")]
-        public void IsTerminalLoggerArgument_RejectsNonTerminalLoggerArguments(string arg)
+        [TestMethod]
+        [DataRow("-tl:invalid")]
+        [DataRow("-tlp")]
+        [DataRow("-clp")]
+        [DataRow("-noconsolelogger:false")]
+        [DataRow("--noconsolelogger")]
+        [DataRow("--unknownLogger:off")]
+        [DataRow("--no-build")]
+        [DataRow("-tlapropertythatstartslikethis")]
+        [DataRow("--tlpwithnocolon")]
+        [DataRow("--terminallogger-something")]
+        [DataRow("-llextra")]
+        [DataRow("foo.csproj")]
+        [DataRow("")]
+        [DataRow("-mt:auto")]
+        [DataRow("-mt:on")]
+        [DataRow("-mtx")]
+        [DataRow("--multithreadedextra")]
+        [DataRow("-mt:\"invalid\"")]
+        [DataRow("-mt:\\\"false\\\"")]
+        [DataRow("-mt:'false'")]
+        [DataRow("-mt:\"\"\"false\"\"\"")]
+        public void LoggerArgument_InvalidFormsAreNotRecognized(string arg)
         {
-            LoggerUtility.IsTerminalLoggerArgument(arg).Should().BeFalse();
+            LoggerUtility.SeparateMSBuildArguments([arg], out var msbuildArgs, out var otherArgs);
+
+            msbuildArgs.Should().BeEmpty();
+            otherArgs.Should().Equal(arg);
         }
 
-        [Theory]
-        [InlineData("--tl:off")]
-        [InlineData("--terminalLogger:auto")]
-        [InlineData("--tlp:default=true")]
-        [InlineData("/tl:off")]
-        [InlineData("/terminalLogger:auto")]
-        [InlineData("/tlp:default=true")]
+        [TestMethod]
+        [DataRow("--tl:off")]
+        [DataRow("--terminalLogger:auto")]
+        [DataRow("--tlp:default=true")]
+        [DataRow("/tl:off")]
+        [DataRow("/terminalLogger:auto")]
+        [DataRow("/tlp:default=true")]
         public void GetBuildOptions_ForwardsTerminalLoggerArgsToMSBuild_NotToTestApplication(string terminalLoggerArg)
         {
             // Parse a `dotnet test` command line that includes a terminal logger argument
@@ -75,7 +127,36 @@ namespace dotnet.Tests
                 "terminal logger arguments must not be passed to the test application, which doesn't recognize them.");
         }
 
-        [Fact]
+        [TestMethod]
+        [DataRow("-mt")]
+        [DataRow("--mt")]
+        [DataRow("-mt:true")]
+        [DataRow("-mt:false")]
+        [DataRow("-mt:")]
+        [DataRow("--multiThreaded")]
+        [DataRow("--multiThreaded:")]
+        [DataRow("/mt")]
+        [DataRow("-mt:\"true\"")]
+        [DataRow("-mt:\"false\"")]
+        [DataRow("-mt:\"\"")]
+        [DataRow("\"--mt:false\"")]
+        public void GetBuildOptions_ForwardsMultiThreadedArgToMSBuild_NotToTestApplication(string multiThreadedArg)
+        {
+            // -mt configures the MSBuild engine used for the build that precedes the test run, so it has
+            // to reach MSBuild. Before this was handled it fell through to the test application, which
+            // rejects it as an unknown option.
+            var mtpCommand = new TestCommandDefinition.MicrosoftTestingPlatform();
+            var parseResult = mtpCommand.Parse([multiThreadedArg]);
+
+            var buildOptions = MSBuildUtility.GetBuildOptions(parseResult);
+
+            buildOptions.MSBuildArgs.Should().Contain(multiThreadedArg,
+                "-mt configures the MSBuild engine and must be forwarded to the underlying build invocation.");
+            buildOptions.TestApplicationArguments.Should().NotContain(multiThreadedArg,
+                "-mt must not be passed to the test application, which doesn't recognize it.");
+        }
+
+        [TestMethod]
         public void GetBuildOptions_LeavesUnknownArgumentsAsTestApplicationArguments()
         {
             var mtpCommand = new TestCommandDefinition.MicrosoftTestingPlatform();
@@ -87,7 +168,7 @@ namespace dotnet.Tests
             buildOptions.MSBuildArgs.Should().NotContain("--my-test-arg");
         }
 
-        [Fact]
+        [TestMethod]
         public void GetBuildOptions_ExtractsTerminalLoggerArgs_BeforePositionalArgumentDetection()
         {
             // Regression test: verify that interspersing terminal logger args with positional arguments
